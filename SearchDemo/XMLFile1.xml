@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<IndexTypes>
+  <Type name="Test">
+    <Field ValueType="System.String" Name="VideoTitle" IsStore="True"></Field>
+    <Field ValueType="System.String" Name="ProductNumber" IsStore="True"></Field>
+    <Field ValueType="System.String[]" Name="Actors" IsStore="True"></Field>
+    <Field ValueType="System.DateTime" Name="PublishedDate" IsStore="True"></Field>
+    <Field ValueType="System.String" Name="Publisher" IsStore="True"></Field>
+    <Field ValueType="System.String" Name="ImgLink" IsStore="True"></Field>
+    <Field ValueType="System.String" Name="ThumbImgLink" IsStore="True"></Field>
+  </Type>
+  <Type name="aaa3">
+    <Field ValueType="System.String" Name="VideoTitle" IsStore="True"></Field>
+    <Field ValueType="System.String" Name="ProductNumber" IsStore="True"></Field>
+    <Field ValueType="System.String" Name="Actors" IsStore="True"></Field>
+    <Field ValueType="System.Int32" Name="Num" IsStore="True"></Field>
+  </Type>
+</IndexTypes>
+
+<!--"VideoTitle":"${VideoTitle}",
+"ProductNumber", "${ProductNumber}",
+"Actors": ["Actor1","Actor2"],
+"PublishedDate": "${PublishedDate}",
+"Publisher": "${Publisher}",
+"ImgLink": "${ImgLink}", /*not index*/
+"ThumbImgLink": "${ThumbImgLink}" /*not index*/-->
