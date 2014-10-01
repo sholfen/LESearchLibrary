@@ -71,7 +71,6 @@
     <Compile Include="Collections\ModelKeyCollection.cs" />
     <Compile Include="DataClass\VideoItem.cs" />
     <Compile Include="Indexer.cs" />
-    <Compile Include="JsonDataConveter.cs" />
     <Compile Include="Modules\ConfigModule.cs" />
     <Compile Include="Modules\InitVideoDatasModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
