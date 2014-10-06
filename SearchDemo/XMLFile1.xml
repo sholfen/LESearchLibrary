@@ -16,11 +16,3 @@
     <Field ValueType="System.Int32" Name="Num" IsStore="True"></Field>
   </Type>
 </IndexTypes>
-
-<!--"VideoTitle":"${VideoTitle}",
-"ProductNumber", "${ProductNumber}",
-"Actors": ["Actor1","Actor2"],
-"PublishedDate": "${PublishedDate}",
-"Publisher": "${Publisher}",
-"ImgLink": "${ImgLink}", /*not index*/
-"ThumbImgLink": "${ThumbImgLink}" /*not index*/-->

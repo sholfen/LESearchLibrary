@@ -90,12 +90,6 @@ namespace LuceneSearch
                 dynamic item = new ExpandoObject();
                 var dicItem = (IDictionary<String, Object>)item;
 
-                foreach (Field docFieldItem in hitDoc.GetFields())
-                {
-                    Console.WriteLine("Field: " + docFieldItem.Name);
-                }
-                Console.WriteLine();
-
                 foreach (FieldItem fieldItem in fieldItemList)
                 {
                     string fieldName = fieldItem.FieldName;

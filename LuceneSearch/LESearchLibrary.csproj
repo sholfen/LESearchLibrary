@@ -70,6 +70,8 @@
   <ItemGroup>
     <Compile Include="Collections\ModelKeyCollection.cs" />
     <Compile Include="DataClass\VideoItem.cs" />
+    <Compile Include="ErrorCollections\BaseError.cs" />
+    <Compile Include="ErrorCollections\DataTypeNotSupportError.cs" />
     <Compile Include="Indexer.cs" />
     <Compile Include="Modules\ConfigModule.cs" />
     <Compile Include="Modules\InitVideoDatasModule.cs" />

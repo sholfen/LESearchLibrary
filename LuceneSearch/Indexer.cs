@@ -87,7 +87,6 @@ namespace LuceneSearch
         public static void ResetIndex(DirectoryType directoryType)
         {
             IndexWriter indexWriter = null;
-
             Lucene.Net.Store.Directory directory = null;
             switch (directoryType)
             {
