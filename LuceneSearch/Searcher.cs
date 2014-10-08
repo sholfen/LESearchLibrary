@@ -22,8 +22,15 @@ namespace LuceneSearch
 
         private IndexSearcher indexSearcher;
         private bool isDispose;
+        private DirectoryType directoryType;
 
         public Searcher(DirectoryType directoryType)
+        {
+            this.directoryType = directoryType;
+            this.InitDirectory(directoryType);
+        }
+
+        private void InitDirectory(DirectoryType directoryType)
         {
             Lucene.Net.Store.Directory directory = null;
             switch (directoryType)
@@ -125,6 +132,12 @@ namespace LuceneSearch
             }
 
             return listSearchResults;
+        }
+
+        public void ReloadIndexFiles()
+        {
+            this.Dispose();
+            this.InitDirectory(this.directoryType);
         }
     }
 }
