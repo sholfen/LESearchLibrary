@@ -25,6 +25,20 @@ namespace LuceneSearch.Modules
             return value;
         }
 
+        public static string GetCustomizeIndexPath()
+        {
+            string value = string.Empty;
+            try
+            {
+                value = ConfigurationManager.AppSettings["CustomizeIndexPath"];
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return value;
+        }
+
         public static Dictionary<string, FieldItem> GetJsonSetting(string filePath, string typeName)
         {
             Dictionary<string, FieldItem> typeSetting = new Dictionary<string, FieldItem>();

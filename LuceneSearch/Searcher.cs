@@ -18,28 +18,29 @@ namespace LuceneSearch
 {
     public class Searcher
     {
-        public enum DirectoryType { AzureBase, FileBase }
-
         private IndexSearcher indexSearcher;
         private bool isDispose;
-        private DirectoryType directoryType;
+        private Utility.DirectoryType directoryType;
 
-        public Searcher(DirectoryType directoryType)
+        public Searcher(Utility.DirectoryType directoryType)
         {
             this.directoryType = directoryType;
             this.InitDirectory(directoryType);
         }
 
-        private void InitDirectory(DirectoryType directoryType)
+        private void InitDirectory(Utility.DirectoryType directoryType)
         {
             Lucene.Net.Store.Directory directory = null;
             switch (directoryType)
             {
-                case DirectoryType.AzureBase:
+                case Utility.DirectoryType.AzureBase:
                     directory = CreateAzureBaseDirectory();
                     break;
-                case DirectoryType.FileBase:
+                case Utility.DirectoryType.FileBase:
                     directory = CreateFileBaseDirectory();
+                    break;
+                case Utility.DirectoryType.CustomizeFilePathBase:
+                    directory = Utility.CreateCustomizeFilePathBaseDirectory();
                     break;
                 default:
                     directory = CreateFileBaseDirectory();
@@ -67,10 +68,10 @@ namespace LuceneSearch
             Microsoft.WindowsAzure.Storage.CloudStorageAccount cloudAccount = Microsoft.WindowsAzure.Storage.CloudStorageAccount.DevelopmentStorageAccount;
             Microsoft.WindowsAzure.Storage.CloudStorageAccount.TryParse(Microsoft.WindowsAzure.CloudConfigurationManager.GetSetting("blobStorage"), out cloudAccount);
             var cacheDirectory = new RAMDirectory();
-            string container = "LuceneNetIndex";
-#if DEBUG
-            container = "LuceneDevMode";
-#endif
+            string container = Microsoft.WindowsAzure.CloudConfigurationManager.GetSetting("ContainerName");
+//#if DEBUG
+//            container = "LuceneDevMode";
+//#endif
             AzureDirectory azureDirectory = new AzureDirectory(cloudAccount, container, cacheDirectory);
 
             return azureDirectory;

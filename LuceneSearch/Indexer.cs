@@ -27,20 +27,21 @@ namespace LuceneSearch
     {    
         private IndexWriter indexWriter;
 		private bool isDispose;
-        private Type itemType;
+        //private Type itemType;
 
-        public enum DirectoryType { AzureBase, FileBase }
-
-        public Indexer(DirectoryType directoryType)
+        public Indexer(Utility.DirectoryType directoryType)
         {
             Lucene.Net.Store.Directory directory = null;
             switch (directoryType)
             {
-                case DirectoryType.AzureBase:
+                case Utility.DirectoryType.AzureBase:
                     directory = CreateAzureBaseDirectory();
                     break;
-                case DirectoryType.FileBase:
+                case Utility.DirectoryType.FileBase:
                     directory = CreateFileBaseDirectory();
+                    break;
+                case Utility.DirectoryType.CustomizeFilePathBase:
+                    directory = CreateCustomizeFilePathBaseDirectory();
                     break;
                 default:
                     directory = CreateFileBaseDirectory();
@@ -56,19 +57,31 @@ namespace LuceneSearch
             Microsoft.WindowsAzure.Storage.CloudStorageAccount cloudAccount = Microsoft.WindowsAzure.Storage.CloudStorageAccount.DevelopmentStorageAccount;
             Microsoft.WindowsAzure.Storage.CloudStorageAccount.TryParse(Microsoft.WindowsAzure.CloudConfigurationManager.GetSetting("blobStorage"), out cloudAccount);
             var cacheDirectory = new RAMDirectory();
-            string container = "LuceneNetIndex";
-#if DEBUG
-            container = "LuceneDevMode";
-#endif
+            string container = Microsoft.WindowsAzure.CloudConfigurationManager.GetSetting("ContainerName");
+//#if DEBUG
+//            container = "LuceneDevMode";
+//#endif
 
             AzureDirectory azureDirectory = new AzureDirectory(cloudAccount, container, cacheDirectory);
 
             return azureDirectory;
         }
 
+        public static FSDirectory CreateCustomizeFilePathBaseDirectory()
+        {
+            string indexPath =  ConfigModule.GetCustomizeIndexPath();
+            return CreateFileBaseDirectory(indexPath);
+        }
+        
         public static FSDirectory CreateFileBaseDirectory()
         {
             string indexPath = AppDomain.CurrentDomain.BaseDirectory + ConfigModule.GetIndexPath();
+            return CreateFileBaseDirectory(indexPath);
+        }
+
+        public static FSDirectory CreateFileBaseDirectory(string path)
+        {
+            string indexPath = path;
             FSDirectory dir = FSDirectory.Open(new DirectoryInfo(indexPath));
 
             return dir;
@@ -84,17 +97,20 @@ namespace LuceneSearch
 			}
 		}
 
-        public static void ResetIndex(DirectoryType directoryType)
+        public static void ResetIndex(Utility.DirectoryType directoryType)
         {
             IndexWriter indexWriter = null;
             Lucene.Net.Store.Directory directory = null;
             switch (directoryType)
             {
-                case DirectoryType.AzureBase:
+                case Utility.DirectoryType.AzureBase:
                     directory = CreateAzureBaseDirectory();
                     break;
-                case DirectoryType.FileBase:
+                case Utility.DirectoryType.FileBase:
                     directory = CreateFileBaseDirectory();
+                    break;
+                case Utility.DirectoryType.CustomizeFilePathBase:
+                    directory = CreateCustomizeFilePathBaseDirectory();
                     break;
                 default:
                     directory = CreateFileBaseDirectory();
@@ -212,6 +228,40 @@ namespace LuceneSearch
             }
 
             //create fields
+            Document doc = this.AddDataToIndex<T>(listTypeSetting, type, item); 
+
+            this.indexWriter.AddDocument(doc);
+            this.indexWriter.Optimize();
+            this.indexWriter.Commit();
+        }
+
+        public void AddItemList<T>(List<T> list)
+        {
+            if (this.typeCache == null) this.typeCache = new Dictionary<string, List<FieldItem>>();
+            List<FieldItem> listTypeSetting = null;
+            Type type = typeof(T);
+            if (this.typeCache.ContainsKey(type.FullName))
+            {
+                listTypeSetting = this.typeCache[type.FullName];
+            }
+            else
+            {
+                listTypeSetting = this.CreateTypeSetting(type);
+            }
+
+            foreach (var item in list)
+            {
+                //create fields
+                Document doc = this.AddDataToIndex<T>(listTypeSetting, type, item);
+                this.indexWriter.AddDocument(doc);
+            }
+
+            this.indexWriter.Optimize();
+            this.indexWriter.Commit();
+        }
+
+        private Document AddDataToIndex<T>(List<FieldItem> listTypeSetting, Type type, T item)
+        {
             Document doc = new Document();
             foreach (FieldItem fieldItem in listTypeSetting)
             {
@@ -255,10 +305,7 @@ namespace LuceneSearch
 
                 doc.Add(field);
             }
-
-            this.indexWriter.AddDocument(doc);
-            this.indexWriter.Optimize();
-            this.indexWriter.Commit();
+            return doc;
         }
 
         private List<FieldItem> CreateTypeSetting(Type type)
@@ -278,6 +325,25 @@ namespace LuceneSearch
                 }
             }
             return listTypeSetting;
+        }
+
+        public void SyncIndex(string[] dirs)
+        {
+            if (dirs.Length > 5)
+            {
+                throw new Exception("directories are too many");
+            }
+            else
+            {
+                FSDirectory[] fsdirs = new FSDirectory[dirs.Length];
+                for (int i = 0; i < dirs.Length; ++i)
+                {
+                    fsdirs[i] = FSDirectory.Open(dirs[i]);
+                }
+                this.indexWriter.AddIndexesNoOptimize(fsdirs);
+                this.indexWriter.Optimize();
+                //this.indexWriter.Commit();
+            }
         }
     }
 }
