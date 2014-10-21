@@ -69,6 +69,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Collections\ModelKeyCollection.cs" />
+    <Compile Include="Collections\UtilityKeyCollection.cs" />
     <Compile Include="DataClass\VideoItem.cs" />
     <Compile Include="ErrorCollections\BaseError.cs" />
     <Compile Include="ErrorCollections\DataTypeNotSupportError.cs" />
@@ -91,5 +92,7 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Attributes\" />
+  </ItemGroup>
 </Project>

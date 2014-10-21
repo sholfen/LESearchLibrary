@@ -31,31 +31,59 @@ namespace SearchDemo
     {
         static void Main(string[] args)
         {
-            SyncIndexFilesExample();
+            Paging();
+            //SyncIndexFilesExample();
             //EasyToUseExample();
             //UsingConfigFileExample();
         }
 
-        static void SyncIndexFilesExample()
+        static void Paging()
         {
-            Video v1 = new Video { Actors = "汁波密", VideoTitle = "Video Title1" };
-            Video v2 = new Video { Actors = "汁波密", VideoTitle = "Video Title2" };
-            Video v3 = new Video { Actors = "汁波密", VideoTitle = "Video Title3" };
+            int pageIndex = 4, pageSize = 10;
 
-            Indexer.ResetIndex(Utility.DirectoryType.CustomizeFilePathBase);
-            Indexer indexer = new Indexer(Utility.DirectoryType.CustomizeFilePathBase);
-            indexer.AddItem<Video>(v1);
-            indexer.AddItem<Video>(v2);
-            indexer.AddItem<Video>(v3);
+            int dataLength = 46;
+            Indexer.ResetIndex(Utility.DirectoryType.FileBase);
+            Indexer indexer = new Indexer(Utility.DirectoryType.FileBase);
+
+            for (int i = 1; i <= dataLength; ++i)
+            {
+                Video v = new Video { Actors = "Tsubomi", VideoTitle = "Video Title" + i.ToString() };
+                indexer.AddItem<Video>(v);
+            }
             indexer.Dispose();
 
-            Video v4 = new Video { Actors = "汁波密", VideoTitle = "Video Title4" };
-            Video v5 = new Video { Actors = "汁波密", VideoTitle = "Video Title5" };
-            Video v6 = new Video { Actors = "汁波密", VideoTitle = "Video Title6" };
+            Searcher searcher = new Searcher(Utility.DirectoryType.FileBase);
+            List<dynamic> listResult = searcher.SearchDynamicItemsByQuery("Tsubomi", "Actors", pageIndex, pageSize);
+            foreach (dynamic videoItem in listResult)
+            {
+                Console.WriteLine(videoItem.VideoTitle);
+                Console.WriteLine(videoItem.Actors);
+                Console.WriteLine();
+            }
+            
+        }
+
+        static void SyncIndexFilesExample()
+        {
+            int dataLength = 4;
+            Indexer.ResetIndex(Utility.DirectoryType.CustomizeFilePathBase);
+            Indexer indexer = new Indexer(Utility.DirectoryType.CustomizeFilePathBase);
+
+            for (int i = 1; i <= dataLength; ++i)
+            {
+                Video v = new Video { Actors = "Tsubomi", VideoTitle = "Video Title" + i.ToString() };
+                indexer.AddItem<Video>(v);
+            }
+            indexer.Dispose();
+
+
+            dataLength = 6;
             List<Video> list = new List<Video>();
-            list.Add(v4);
-            list.Add(v5);
-            list.Add(v6);
+            for (int i = 1; i <= dataLength; ++i)
+            {
+                Video v = new Video { Actors = "Tsubomi", VideoTitle = "Video Title_" + i.ToString() };
+                list.Add(v);
+            }
             Indexer.ResetIndex(Utility.DirectoryType.FileBase);
             indexer = new Indexer(Utility.DirectoryType.FileBase);
             indexer.AddItemList<Video>(list);
@@ -64,7 +92,7 @@ namespace SearchDemo
             indexer.Dispose();
 
             Searcher searcher = new Searcher(Utility.DirectoryType.FileBase);
-            List<dynamic> listResult = searcher.SearchDynamicItemsByQuery("汁波密", "Actors");
+            List<dynamic> listResult = searcher.SearchDynamicItemsByQuery("Tsubomi", "Actors");
             foreach (dynamic videoItem in listResult)
             {
                 Console.WriteLine(videoItem.VideoTitle);

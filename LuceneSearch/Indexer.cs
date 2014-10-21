@@ -27,64 +27,30 @@ namespace LuceneSearch
     {    
         private IndexWriter indexWriter;
 		private bool isDispose;
-        //private Type itemType;
+        private Utility.DirectoryType directoryType;
 
         public Indexer(Utility.DirectoryType directoryType)
         {
+            this.directoryType = directoryType;
             Lucene.Net.Store.Directory directory = null;
             switch (directoryType)
             {
                 case Utility.DirectoryType.AzureBase:
-                    directory = CreateAzureBaseDirectory();
+                    directory = Utility.CreateAzureBaseDirectory();
                     break;
                 case Utility.DirectoryType.FileBase:
-                    directory = CreateFileBaseDirectory();
+                    directory = Utility.CreateFileBaseDirectory();
                     break;
                 case Utility.DirectoryType.CustomizeFilePathBase:
-                    directory = CreateCustomizeFilePathBaseDirectory();
+                    directory = Utility.CreateCustomizeFilePathBaseDirectory();
                     break;
                 default:
-                    directory = CreateFileBaseDirectory();
+                    directory = Utility.CreateFileBaseDirectory();
                     break;
             }
 
             this.indexWriter = new IndexWriter(directory, new StandardAnalyzer(Lucene.Net.Util.Version.LUCENE_30), false, IndexWriter.MaxFieldLength.LIMITED);
             this.indexWriter.SetRAMBufferSizeMB(100.0);
-        }
-
-        public static AzureDirectory CreateAzureBaseDirectory()
-        {
-            Microsoft.WindowsAzure.Storage.CloudStorageAccount cloudAccount = Microsoft.WindowsAzure.Storage.CloudStorageAccount.DevelopmentStorageAccount;
-            Microsoft.WindowsAzure.Storage.CloudStorageAccount.TryParse(Microsoft.WindowsAzure.CloudConfigurationManager.GetSetting("blobStorage"), out cloudAccount);
-            var cacheDirectory = new RAMDirectory();
-            string container = Microsoft.WindowsAzure.CloudConfigurationManager.GetSetting("ContainerName");
-//#if DEBUG
-//            container = "LuceneDevMode";
-//#endif
-
-            AzureDirectory azureDirectory = new AzureDirectory(cloudAccount, container, cacheDirectory);
-
-            return azureDirectory;
-        }
-
-        public static FSDirectory CreateCustomizeFilePathBaseDirectory()
-        {
-            string indexPath =  ConfigModule.GetCustomizeIndexPath();
-            return CreateFileBaseDirectory(indexPath);
-        }
-        
-        public static FSDirectory CreateFileBaseDirectory()
-        {
-            string indexPath = AppDomain.CurrentDomain.BaseDirectory + ConfigModule.GetIndexPath();
-            return CreateFileBaseDirectory(indexPath);
-        }
-
-        public static FSDirectory CreateFileBaseDirectory(string path)
-        {
-            string indexPath = path;
-            FSDirectory dir = FSDirectory.Open(new DirectoryInfo(indexPath));
-
-            return dir;
         }
 
 		public void Dispose()
@@ -104,16 +70,16 @@ namespace LuceneSearch
             switch (directoryType)
             {
                 case Utility.DirectoryType.AzureBase:
-                    directory = CreateAzureBaseDirectory();
+                    directory = Utility.CreateAzureBaseDirectory();
                     break;
                 case Utility.DirectoryType.FileBase:
-                    directory = CreateFileBaseDirectory();
+                    directory = Utility.CreateFileBaseDirectory();
                     break;
                 case Utility.DirectoryType.CustomizeFilePathBase:
-                    directory = CreateCustomizeFilePathBaseDirectory();
+                    directory = Utility.CreateCustomizeFilePathBaseDirectory();
                     break;
                 default:
-                    directory = CreateFileBaseDirectory();
+                    directory = Utility.CreateFileBaseDirectory();
                     break;
             }
 
@@ -213,6 +179,11 @@ namespace LuceneSearch
         }
 
         private Dictionary<string, List<FieldItem>> typeCache;
+        /// <summary>
+        /// add data and index it.
+        /// </summary>
+        /// <typeparam name="T">input data's data type</typeparam>
+        /// <param name="item">data that you wnat to index</param>
         public void AddItem<T>(T item)
         {
             if (this.typeCache == null) this.typeCache = new Dictionary<string, List<FieldItem>>();
@@ -329,20 +300,27 @@ namespace LuceneSearch
 
         public void SyncIndex(string[] dirs)
         {
-            if (dirs.Length > 5)
+            if (this.directoryType == Utility.DirectoryType.FileBase ||
+                this.directoryType == Utility.DirectoryType.CustomizeFilePathBase)
             {
-                throw new Exception("directories are too many");
+                if (dirs.Length > 5)
+                {
+                    throw new Exception("directories are too many");
+                }
+                else
+                {
+                    FSDirectory[] fsdirs = new FSDirectory[dirs.Length];
+                    for (int i = 0; i < dirs.Length; ++i)
+                    {
+                        fsdirs[i] = FSDirectory.Open(dirs[i]);
+                    }
+                    this.indexWriter.AddIndexesNoOptimize(fsdirs);
+                    this.indexWriter.Optimize();
+                }
             }
             else
             {
-                FSDirectory[] fsdirs = new FSDirectory[dirs.Length];
-                for (int i = 0; i < dirs.Length; ++i)
-                {
-                    fsdirs[i] = FSDirectory.Open(dirs[i]);
-                }
-                this.indexWriter.AddIndexesNoOptimize(fsdirs);
-                this.indexWriter.Optimize();
-                //this.indexWriter.Commit();
+                throw new Exception("Not Support");
             }
         }
     }

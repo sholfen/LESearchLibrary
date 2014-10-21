@@ -18,6 +18,8 @@ namespace LuceneSearch
 {
     public class Searcher
     {
+        private const int MaxResultsSize = 1000;
+
         private IndexSearcher indexSearcher;
         private bool isDispose;
         private Utility.DirectoryType directoryType;
@@ -34,16 +36,16 @@ namespace LuceneSearch
             switch (directoryType)
             {
                 case Utility.DirectoryType.AzureBase:
-                    directory = CreateAzureBaseDirectory();
+                    directory = Utility.CreateAzureBaseDirectory();
                     break;
                 case Utility.DirectoryType.FileBase:
-                    directory = CreateFileBaseDirectory();
+                    directory = Utility.CreateFileBaseDirectory();
                     break;
                 case Utility.DirectoryType.CustomizeFilePathBase:
                     directory = Utility.CreateCustomizeFilePathBaseDirectory();
                     break;
                 default:
-                    directory = CreateFileBaseDirectory();
+                    directory = Utility.CreateFileBaseDirectory();
                     break;
             }
 
@@ -63,34 +65,12 @@ namespace LuceneSearch
             }
         }
 
-        public static AzureDirectory CreateAzureBaseDirectory()
-        {
-            Microsoft.WindowsAzure.Storage.CloudStorageAccount cloudAccount = Microsoft.WindowsAzure.Storage.CloudStorageAccount.DevelopmentStorageAccount;
-            Microsoft.WindowsAzure.Storage.CloudStorageAccount.TryParse(Microsoft.WindowsAzure.CloudConfigurationManager.GetSetting("blobStorage"), out cloudAccount);
-            var cacheDirectory = new RAMDirectory();
-            string container = Microsoft.WindowsAzure.CloudConfigurationManager.GetSetting("ContainerName");
-//#if DEBUG
-//            container = "LuceneDevMode";
-//#endif
-            AzureDirectory azureDirectory = new AzureDirectory(cloudAccount, container, cacheDirectory);
-
-            return azureDirectory;
-        }
-
-        public static FSDirectory CreateFileBaseDirectory()
-        {
-            string indexPath = AppDomain.CurrentDomain.BaseDirectory + ConfigModule.GetIndexPath();
-            FSDirectory dir = FSDirectory.Open(new DirectoryInfo(indexPath));
-
-            return dir;
-        }
-
         public List<dynamic> SearchDynamicItemsByQuery(List<FieldItem> fieldItemList, string queryString, string queryField)
         {
             List<dynamic> listSearchResults = new List<dynamic>();
             QueryParser parser = new QueryParser(Lucene.Net.Util.Version.LUCENE_30, queryField, new StandardAnalyzer(Lucene.Net.Util.Version.LUCENE_30));
             Query query = parser.Parse(queryString);
-            ScoreDoc[] hits = this.indexSearcher.Search(query, null, 1000).ScoreDocs;
+            ScoreDoc[] hits = this.indexSearcher.Search(query, null, MaxResultsSize).ScoreDocs;
 
             for (int i = 0; i < hits.Length; i++)
             {
@@ -111,14 +91,62 @@ namespace LuceneSearch
             return listSearchResults;
         }
 
+        /// <summary>
+        /// search data
+        /// </summary>
+        /// <param name="queryString">query</param>
+        /// <param name="queryField">data field</param>
+        /// <returns></returns>
         public List<dynamic> SearchDynamicItemsByQuery(string queryString, string queryField)
         {
             List<dynamic> listSearchResults = new List<dynamic>();
             QueryParser parser = new QueryParser(Lucene.Net.Util.Version.LUCENE_30, queryField, new StandardAnalyzer(Lucene.Net.Util.Version.LUCENE_30));
             Query query = parser.Parse(queryString);
-            ScoreDoc[] hits = this.indexSearcher.Search(query, null, 1000).ScoreDocs;
+            ScoreDoc[] hits = this.indexSearcher.Search(query, 1000).ScoreDocs;
 
             for (int i = 0; i < hits.Length; i++)
+            {
+                Document hitDoc = this.indexSearcher.Doc(hits[i].Doc);
+                dynamic item = new ExpandoObject();
+                var dicItem = (IDictionary<String, Object>)item;
+
+                foreach (Field docFieldItem in hitDoc.GetFields())
+                {
+                    dicItem.Add(docFieldItem.Name, hitDoc.Get(docFieldItem.Name));
+                }
+
+                listSearchResults.Add(item);
+            }
+
+            return listSearchResults;
+        }
+
+        /// <summary>
+        /// search function that provide paging.
+        /// </summary>
+        /// <param name="queryString">query</param>
+        /// <param name="queryField">data field</param>
+        /// <param name="pageIndex">start from 0</param>
+        /// <param name="pageSize">result size of one page</param>
+        /// <returns></returns>
+        public List<dynamic> SearchDynamicItemsByQuery(string queryString, string queryField, int pageIndex, int pageSize)
+        {
+            //check pageIndex and pageSize first
+            int skipCount = pageIndex * pageSize;
+            int resultIndexTail = skipCount + pageSize;
+            List<dynamic> listSearchResults = new List<dynamic>();
+            if (skipCount >= MaxResultsSize)
+            {
+                return listSearchResults;
+            }
+
+
+            QueryParser parser = new QueryParser(Lucene.Net.Util.Version.LUCENE_30, queryField, new StandardAnalyzer(Lucene.Net.Util.Version.LUCENE_30));
+            Query query = parser.Parse(queryString);
+            ScoreDoc[] hits = this.indexSearcher.Search(query, MaxResultsSize).ScoreDocs;
+
+            int resultLength = Math.Min(hits.Length, resultIndexTail);
+            for (int i = skipCount; i < resultLength; i++)
             {
                 Document hitDoc = this.indexSearcher.Doc(hits[i].Doc);
                 dynamic item = new ExpandoObject();

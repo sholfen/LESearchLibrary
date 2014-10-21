@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Configuration;
 
 using System.Xml.Linq;
+using LuceneSearch.Collections;
 
 namespace LuceneSearch.Modules
 {
@@ -16,7 +17,7 @@ namespace LuceneSearch.Modules
             string value = string.Empty;
             try
             {
-                value = ConfigurationManager.AppSettings["IndexPath"];
+                value = ConfigurationManager.AppSettings[UtilityKeyCollection.IndexPath];
             }
             catch (Exception ex)
             {
@@ -30,7 +31,7 @@ namespace LuceneSearch.Modules
             string value = string.Empty;
             try
             {
-                value = ConfigurationManager.AppSettings["CustomizeIndexPath"];
+                value = ConfigurationManager.AppSettings[UtilityKeyCollection.CustomizeIndexPath];
             }
             catch (Exception ex)
             {

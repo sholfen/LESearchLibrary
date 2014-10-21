@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Lucene.Net.Store;
+using Lucene.Net.Store.Azure;
+using LuceneSearch.Collections;
 using LuceneSearch.Modules;
 
 namespace LuceneSearch
@@ -38,5 +40,40 @@ namespace LuceneSearch
             string indexPath = ConfigModule.GetCustomizeIndexPath();
             return CreateFileBaseDirectory(indexPath);
         }
+
+        public static AzureDirectory CreateAzureBaseDirectory()
+        {
+            Microsoft.WindowsAzure.Storage.CloudStorageAccount cloudAccount = Microsoft.WindowsAzure.Storage.CloudStorageAccount.DevelopmentStorageAccount;
+            Microsoft.WindowsAzure.Storage.CloudStorageAccount.TryParse(
+                Microsoft.WindowsAzure.CloudConfigurationManager.GetSetting(UtilityKeyCollection.blobStorage), out cloudAccount);
+            var cacheDirectory = new RAMDirectory();
+            string container = Microsoft.WindowsAzure.CloudConfigurationManager.GetSetting(UtilityKeyCollection.ContainerName);
+            AzureDirectory azureDirectory = new AzureDirectory(cloudAccount, container, cacheDirectory);
+
+            return azureDirectory;
+        }
+
+        public static Lucene.Net.Store.Directory CreateLuceneDirectory(Utility.DirectoryType directoryType)
+        {
+            Lucene.Net.Store.Directory directory = null;
+            switch (directoryType)
+            {
+                case Utility.DirectoryType.AzureBase:
+                    directory = CreateAzureBaseDirectory();
+                    break;
+                case Utility.DirectoryType.FileBase:
+                    directory = CreateFileBaseDirectory();
+                    break;
+                case Utility.DirectoryType.CustomizeFilePathBase:
+                    directory = CreateCustomizeFilePathBaseDirectory();
+                    break;
+                default:
+                    directory = CreateFileBaseDirectory();
+                    break;
+            }
+
+            return directory;
+        }
+
     }
 }
