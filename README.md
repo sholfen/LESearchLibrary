@@ -1,10 +1,10 @@
-#LESearch Library#
+# LESearch Library
 
 ***Easy Using Library for Search Engine***
 
 **LESeach is a light weight search engine library that is base on Lucene.**
 
-##Example##
+## Example
 
         Video v1 = new Video { Actors = "汁波密", VideoTitle = "Video Title1" };
         Video v2 = new Video { Actors = "汁波密", VideoTitle = "Video Title2" };
@@ -87,9 +87,9 @@ Code:
 
 
 
-##New Function##
+## New Function
 
-####Paging####
+#### Paging
 
 The parameter pageIndex starts from 0.
 
@@ -99,7 +99,7 @@ The parameter pageIndex starts from 0.
 	int pageIndex, 
 	int pageSize)
 
-####Custom index file path####
+#### Custom index file path
 
 Add this value in app.config.
 
@@ -111,6 +111,6 @@ And modify the code.
 
 	Indexer indexer = new Indexer(Utility.DirectoryType.CustomizeFilePathBase);
 
-####Index Files Synchronization####
+#### Index Files Synchronization
 
 	void Indexer.SyncIndex(string[] dirs)
